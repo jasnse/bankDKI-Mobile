@@ -13,15 +13,22 @@ import com.kms.katalon.core.model.FailureHandling as FailureHandling
 import com.kms.katalon.core.testcase.TestCase as TestCase
 import com.kms.katalon.core.testdata.TestData as TestData
 import com.kms.katalon.core.testng.keyword.TestNGBuiltinKeywords as TestNGKW
-import com.kms.katalon.core.testobject.TestObject as TestObject
+import com.kms.katalon.core.testobject.ConditionType
+import com.kms.katalon.core.testobject.TestObject
+import com.kms.katalon.core.util.KeywordUtil
 import com.kms.katalon.core.webservice.keyword.WSBuiltInKeywords as WS
+import com.kms.katalon.core.webui.common.WebUiCommonHelper
 import com.kms.katalon.core.webui.keyword.WebUiBuiltInKeywords as WebUI
 import com.kms.katalon.core.windows.keyword.WindowsBuiltinKeywords as Windows
 
 import groovy.console.ui.ObjectBrowser
 import groovy.json.StringEscapeUtils
 import internal.GlobalVariable as GlobalVariable
-import org.openqa.selenium.Keys as Keys
+
+import org.openqa.selenium.WebElement
+import org.openqa.selenium.Keys as SeleniumKeys   // kalau butuh tombol keyboard
+import java.util.Arrays
+import org.openqa.selenium.support.ui.Select
 
 String link = "https://dki-crms-site.skyworx.co.id/login"
 
@@ -91,7 +98,7 @@ WebUI.delay(2)
 WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//a[contains(@href, '/tasklist-dki/')])[1]"]), FailureHandling.STOP_ON_FAILURE)
 
 //input data agunan
-String jenisAgunan = "GIRO"
+String jenisAgunan = "TABUNGAN"
 String namaPemilik = "Jason Katalon"
 String alamat = "Jl.Alamat No.123, Jakarta Pusat"
 String buktiKepemilikan = "SHM"
@@ -130,37 +137,136 @@ WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[text()
 
 //compare Edit Anggunan dengan input
 WebUI.delay(2)
-// Define the XPath for the column header with aria-colindex='1' and aria-sort='none'
-String xpath = "(//th[@aria-colindex='1' and @aria-sort='none'])[3]"
 
-// JavaScript to set aria-sort to 'descending' and trigger the click event
-String script = """
-    var element = document.evaluate("${xpath}", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-    if (element) {
-        // Change aria-sort to 'descending'
-        element.setAttribute('aria-sort', 'descending');
-        
-        // Trigger a click event on the element to trigger sorting in the UI
-        element.click();
-        
-        return 'Successfully changed to descending and clicked the header to sort.';
-    } else {
-        return 'Error: Element not found.';
-    }
-"""
+// click edit last row 
+WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//button[@class='btn mr-1 btn-primary btn-sm'])[last()]"]), FailureHandling.STOP_ON_FAILURE)
 
-// Execute the JavaScript to update aria-sort and click the column header
-String result = WebUI.executeJavaScript(script, null)
+WebUI.delay(3)
 
-// Log the result of the JavaScript execution
-WebUI.comment(result)
+// Helper: bikin TestObject by XPath cepat
+TestObject byXpath(String xp) {
+	TestObject t = new TestObject(xp)
+	t.addProperty('xpath', ConditionType.EQUALS, xp)
+	return t
+}
 
-// Wait for the sorting to be completed (optional: adjust the wait time if needed)
-WebUI.delay(3)  // Wait for 3 seconds (adjust if necessary) for the table to sort
+// Helper: get .value untuk input/textarea/select
+String getDomValue(String xpath) {
+	TestObject obj = byXpath(xpath)
+	WebUI.waitForElementPresent(obj, 10)
+	WebElement el = WebUiCommonHelper.findWebElement(obj, 10)
+	return WebUI.executeJavaScript("return arguments[0].value;", Arrays.asList(el))
+}
 
-// After sorting, click the button in the row
-WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//button[@class='btn mr-1 btn-primary btn-sm'])[2]"]), FailureHandling.STOP_ON_FAILURE)
+// Helper: kalau elemen select & butuh label teks option terpilih
+String getSelectedText(String xpath) {
+	TestObject obj = byXpath(xpath)
+	WebElement el = WebUiCommonHelper.findWebElement(obj, 10)
+	return WebUI.executeJavaScript(
+		"var s=arguments[0]; var o=s.options[s.selectedIndex]; return o? o.text.trim(): null;",
+		Arrays.asList(el)
+	)
+}
 
+// SELECT: Jenis Agunan
+String jenisAgunanValue = getDomValue("//select[@id='FIELD001-008-002-002']") // contoh: "010"
+String jenisAgunanText  = getSelectedText("//select[@id='FIELD001-008-002-002']") // contoh: "GIRO"
+println "Jenis Agunan => value=${jenisAgunanValue}, text=${jenisAgunanText}"
+
+// INPUT: Nama Pemilik
+String namaPemilikEdit = getDomValue("//input[@id='FIELD001-008-002-003']")
+println "Nama Pemilik => ${namaPemilikEdit}"
+
+// TEXTAREA: Alamat Agunan
+String alamatAgunanEdit = getDomValue("//textarea[@id='FIELD001-008-002-004']")
+println "Alamat Agunan => ${alamatAgunanEdit}"
+
+// SELECT: Bukti Kepemilikan
+String buktiKepValue = getDomValue("//select[@id='FIELD001-008-002-005']")
+String buktiKepText  = getSelectedText("//select[@id='FIELD001-008-002-005']")
+println "Bukti Kepemilikan => value=${buktiKepValue}, text=${buktiKepText}"
+
+// TEXTAREA: Keterangan Agunan
+String keteranganAgunanEdit = getDomValue("//textarea[@id='FIELD001-008-002-006']")
+println "Keterangan Agunan => ${keteranganAgunanEdit}"
+
+// INPUT (angka): Nilai Jaminan / Pasar / Likuidasi
+String nilaiJaminanEdit   = getDomValue("//input[@id='FIELD001-008-002-007']")
+String nilaiPasarEdit     = getDomValue("//input[@id='FIELD001-008-002-008']")
+String nilaiLikuidasiEdit = getDomValue("//input[@id='FIELD001-008-002-009']")
+println "Nilai Jaminan   => ${nilaiJaminanEdit}"
+println "Nilai Pasar     => ${nilaiPasarEdit}"
+println "Nilai Likuidasi => ${nilaiLikuidasiEdit}"
+
+// helper normalisasi angka
+Closure<String> normNum = { s -> s?.replaceAll("[.,\\s]", "") }
+
+// helper assert dengan pesan rapi
+void mustEqual(String fieldName, String expected, String actual) {
+	if (expected != actual) {
+		KeywordUtil.markFailed("Mismatch ${fieldName}: expected='${expected}', got='${actual}'")
+	} else {
+		KeywordUtil.logInfo("OK ${fieldName}: '${actual}'")
+	}
+}
+
+// Dropdown bandingkan TEKS (bukan value kode)
+mustEqual("Jenis Agunan (text)", jenisAgunan, jenisAgunanText)
+mustEqual("Bukti Kepemilikan (text)", buktiKepemilikan, buktiKepText)
+
+// Field teks biasa
+mustEqual("Nama Pemilik", namaPemilik, namaPemilikEdit)
+mustEqual("Alamat Agunan", alamat, alamatAgunanEdit)
+mustEqual("Keterangan Agunan", keteranganAgunan, keteranganAgunanEdit)
+
+// Angka: samakan dulu formatnya
+mustEqual("Nilai Jaminan", normNum(nilaiJaminan), normNum(nilaiJaminanEdit))
+mustEqual("Nilai Pasar",   normNum(NilaiPasar),   normNum(nilaiPasarEdit))
+mustEqual("Nilai Likuidasi", normNum(NilaiLikuidasi), normNum(nilaiLikuidasiEdit))
+
+
+// Flag untuk cek semua validasi berhasil
+boolean allOk = true
+allOk &= (jenisAgunan == jenisAgunanText)
+allOk &= (buktiKepemilikan == buktiKepText)
+allOk &= (namaPemilik == namaPemilikEdit)
+allOk &= (alamat == alamatAgunanEdit)
+allOk &= (keteranganAgunan == keteranganAgunanEdit)
+allOk &= (normNum(nilaiJaminan)   == normNum(nilaiJaminanEdit))
+allOk &= (normNum(NilaiPasar)     == normNum(nilaiPasarEdit))
+allOk &= (normNum(NilaiLikuidasi) == normNum(nilaiLikuidasiEdit))
+
+if (allOk) {
+	// Kalau ada SweetAlert2 di web, pakai Swal.fire
+	String js = """
+      if (window.Swal && typeof Swal.fire === 'function') {
+        Swal.fire({
+          icon: 'success',
+          title: 'Validasi Berhasil',
+          text: 'Semua nilai pada form edit sama dengan inputan.',
+          confirmButtonText: 'OK'
+        });
+      } else {
+        alert('✅ Validasi Berhasil: Semua nilai sama dengan inputan.');
+      }
+    """
+	WebUI.executeJavaScript(js, null)
+} else {
+	// Kalau ada mismatch, kasih popup gagal
+	String js = """
+      if (window.Swal && typeof Swal.fire === 'function') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Validasi Gagal',
+          text: 'Ada nilai yang berbeda. Cek log Katalon untuk detail.',
+          confirmButtonText: 'OK'
+        });
+      } else {
+        alert('❌ Validasi Gagal: Ada nilai yang berbeda. Lihat log.');
+      }
+    """
+	WebUI.executeJavaScript(js, null)
+}
 
 
 
