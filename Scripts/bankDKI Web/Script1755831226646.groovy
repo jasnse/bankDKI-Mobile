@@ -24,7 +24,8 @@ import com.kms.katalon.core.windows.keyword.WindowsBuiltinKeywords as Windows
 
 import groovy.console.ui.ObjectBrowser
 import groovy.json.StringEscapeUtils
-import internal.GlobalVariable as GlobalVariable
+import internal.GlobalVariable
+import software.amazon.awssdk.auth.credentials.internal.WebIdentityCredentialsUtils
 
 import org.openqa.selenium.WebElement
 import org.openqa.selenium.Keys as SeleniumKeys   // kalau butuh tombol keyboard
@@ -38,13 +39,13 @@ String link = "https://dki-crms-site.skyworx.co.id/login"
 def pengelompokanAkun = [
 	"Janji Bayar",
 	"Kirim Email",
-//	"Meninggalkan Pesan",
-//	"Tidak Terjawab",
-//	"Nada Sibuk",
-//	"No Telpon Salah",
-//	"Partial Payment",
-//	"Sudah Bayar",
-//	"Lainnya"
+	"Meninggalkan Pesan",
+	"Tidak Terjawab",
+	"Nada Sibuk",
+	"No Telpon Salah",
+	"Partial Payment",
+	"Sudah Bayar",
+	"Lainnya"
 ]
 
 Map<String, String> mapJenisAgunan = [
@@ -477,47 +478,368 @@ switch (pengelompokanAkun[i]) {
 	case "Janji Bayar":
 	//goto menu janji bayar
 	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': menuTaskList.find { it.key == "Janji Bayar" }?.value]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(4)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "(//input[@placeholder='DPD'])[3]"]), 0, FailureHandling.STOP_ON_FAILURE)
+	//cek masuk sesuai bucket
+	WebUI.delay(10)
+	String norekPinjamanDunning = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[3]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	println("actual in janji bayar: " +norekPinjamanDunning.trim() +" Expected: " + norekpinjaman.trim())
+	
+	if (norekPinjamanDunning.trim() == norekpinjaman.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + norekpinjaman.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + norekPinjamanDunning.trim() + " | Normal: " + norekpinjaman.trim() + "')", null)
+	}
+	
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[3]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD003-009-008']"]), 0, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath',['xpath': "((//table[@role='table'])[5]//button[@class='btn mr-1 btn-warning btn-sm'][1])[1]"]), FailureHandling.STOP_ON_FAILURE)
+	
+	//get dunningcall history after submit
+	WebUI.delay(2)
+	String nilaiJanjiBayarRaw = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//div[@class='p-0 border-bottom value col'])[43]"]), FailureHandling.STOP_ON_FAILURE)
+	String nilaiJanjiBayarDunning = cleanCurrency(nilaiJanjiBayarRaw)
+	
+	if (nilaiJanjiBayarDunning.trim() == jumlahJanji.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + jumlahJanji.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + nilaiJanjiBayarDunning.trim() + " | Normal: " + jumlahJanji.trim() + "')", null)
+	}
+	
+	//close
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[normalize-space(text())='Tutup']"]), FailureHandling.STOP_ON_FAILURE)
 	break
 	
 	case "Kirim Email":
 	//goto menu kirim email
-	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': menuTaskList.find { it.key == "Kirim Email" }?.value]), FailureHandling.STOP_ON_FAILURE)
-	break
+WebUI.click(findTestObject('Object Repository/xpath', ['xpath': menuTaskList.find { it.key == "Kirim Email" }?.value]), FailureHandling.STOP_ON_FAILURE)
+WebUI.delay(4) 
+WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "(//input[@placeholder='DPD'])[7]"]), 0, FailureHandling.STOP_ON_FAILURE)
+
+//cek masuk sesuai bucket
+WebUI.delay(10)
+String norekPinjamanDunning = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[7]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+println("actual in kirim email: " +norekPinjamanDunning.trim() +" Expected: " + norekpinjaman.trim())
+
+if (norekPinjamanDunning.trim() == norekpinjaman.trim()) {
+	WebUI.executeJavaScript("alert('✅ Data sama: " + norekpinjaman.trim() + "')", null)
+} else {
+	WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + norekPinjamanDunning.trim() + " | Normal: " + norekpinjaman.trim() + "')", null)
+}
+
+
+WebUI.delay(1)
+WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[7]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+WebUI.delay(1)
+WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD007-009-008']"]), 0, FailureHandling.STOP_ON_FAILURE)
+WebUI.delay(1)
+WebUI.click(findTestObject('Object Repository/xpath',['xpath': "((//table[@role='table'])[5]//button[@class='btn mr-1 btn-warning btn-sm'][1])[1]"]), FailureHandling.STOP_ON_FAILURE)
+
+//get dunningcall history after submit
+WebUI.delay(2)
+String nilaiJanjiBayarRaw = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//div[@class='p-0 border-bottom value col'])[43]"]), FailureHandling.STOP_ON_FAILURE)
+String nilaiJanjiBayarDunning = cleanCurrency(nilaiJanjiBayarRaw)
+
+if (nilaiJanjiBayarDunning.trim() == jumlahJanji.trim()) {
+	WebUI.executeJavaScript("alert('✅ Data sama: " + jumlahJanji.trim() + "')", null)
+} else {
+	WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + nilaiJanjiBayarDunning.trim() + " | Normal: " + jumlahJanji.trim() + "')", null)
+}
+
+//close
+WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[normalize-space(text())='Tutup']"]), FailureHandling.STOP_ON_FAILURE)
+
+
+break
 	
 	case "Meninggalkan Pesan":
 	//goto menu meninggalkan pesan
 	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': menuTaskList.find { it.key == "Meninggalkan Pesan" }?.value]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(4)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "(//input[@placeholder='DPD'])[4]"]), 0, FailureHandling.STOP_ON_FAILURE)
+	
+	//cek masuk sesuai bucket
+	WebUI.delay(10)
+	String norekPinjamanDunning = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[4]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	println("actual in kirim email: " +norekPinjamanDunning.trim() +" Expected: " + norekpinjaman.trim())
+	
+	if (norekPinjamanDunning.trim() == norekpinjaman.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + norekpinjaman.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + norekPinjamanDunning.trim() + " | Normal: " + norekpinjaman.trim() + "')", null)
+	}
+	
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[4]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD004-009-008']"]), 0, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath',['xpath': "((//table[@role='table'])[6]//button[@class='btn mr-1 btn-warning btn-sm'][1])[1]"]), FailureHandling.STOP_ON_FAILURE)
+	
+	//get dunningcall history after submit
+	WebUI.delay(2)
+	String nilaiJanjiBayarRaw = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//div[@class='p-0 border-bottom value col'])[43]"]), FailureHandling.STOP_ON_FAILURE)
+	String nilaiJanjiBayarDunning = cleanCurrency(nilaiJanjiBayarRaw)
+	
+	if (nilaiJanjiBayarDunning.trim() == jumlahJanji.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + jumlahJanji.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + nilaiJanjiBayarDunning.trim() + " | Normal: " + jumlahJanji.trim() + "')", null)
+	}
+	
+	//close
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[normalize-space(text())='Tutup']"]), FailureHandling.STOP_ON_FAILURE)
+	
+	
 	break
 	
 	case "Tidak Terjawab":
 	//goto menu tidak terjawab
-	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': menuTaskList.find { it.key == "Tidak Terjawab" }?.value]), FailureHandling.STOP_ON_FAILURE)
-	break
+WebUI.click(findTestObject('Object Repository/xpath', ['xpath': menuTaskList.find { it.key == "Tidak Terjawab" }?.value]), FailureHandling.STOP_ON_FAILURE)
+WebUI.delay(4)
+WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "(//input[@placeholder='DPD'])[5]"]), 0, FailureHandling.STOP_ON_FAILURE)
+
+//cek masuk sesuai bucket
+WebUI.delay(10)
+String norekPinjamanDunning = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[5]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+println("actual in kirim email: " +norekPinjamanDunning.trim() +" Expected: " + norekpinjaman.trim())
+
+if (norekPinjamanDunning.trim() == norekpinjaman.trim()) {
+	WebUI.executeJavaScript("alert('✅ Data sama: " + norekpinjaman.trim() + "')", null)
+} else {
+	WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + norekPinjamanDunning.trim() + " | Normal: " + norekpinjaman.trim() + "')", null)
+}
+
+WebUI.delay(1)
+WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[5]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+WebUI.delay(1)
+WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD005-009-008']"]), 0, FailureHandling.STOP_ON_FAILURE)
+WebUI.delay(1)
+WebUI.click(findTestObject('Object Repository/xpath',['xpath': "((//table[@role='table'])[5]//button[@class='btn mr-1 btn-warning btn-sm'][1])[1]"]), FailureHandling.STOP_ON_FAILURE)
+
+//get dunningcall history after submit
+WebUI.delay(2)
+String nilaiJanjiBayarRaw = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//div[@class='p-0 border-bottom value col'])[43]"]), FailureHandling.STOP_ON_FAILURE)
+String nilaiJanjiBayarDunning = cleanCurrency(nilaiJanjiBayarRaw)
+
+if (nilaiJanjiBayarDunning.trim() == jumlahJanji.trim()) {
+	WebUI.executeJavaScript("alert('✅ Data sama: " + jumlahJanji.trim() + "')", null)
+} else {
+	WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + nilaiJanjiBayarDunning.trim() + " | Normal: " + jumlahJanji.trim() + "')", null)
+}
+
+//close
+WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[normalize-space(text())='Tutup']"]), FailureHandling.STOP_ON_FAILURE)
+
+
+break
 	
 	case "Nada Sibuk":
 	//goto menu nada sibuk
 	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': menuTaskList.find { it.key == "Nada Sibuk" }?.value]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(4)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "(//input[@placeholder='DPD'])[9]"]), 0, FailureHandling.STOP_ON_FAILURE)
+	
+	//cek masuk sesuai bucket
+	WebUI.delay(10)
+	String norekPinjamanDunning = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[9]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	println("actual in kirim email: " +norekPinjamanDunning.trim() +" Expected: " + norekpinjaman.trim())
+	
+	if (norekPinjamanDunning.trim() == norekpinjaman.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + norekpinjaman.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + norekPinjamanDunning.trim() + " | Normal: " + norekpinjaman.trim() + "')", null)
+	}
+	
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[9]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD016-009-008']"]), 0, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath',['xpath': "((//table[@role='table'])[5]//button[@class='btn mr-1 btn-warning btn-sm'][1])[1]"]), FailureHandling.STOP_ON_FAILURE)
+	
+	//get dunningcall history after submit
+	WebUI.delay(2)
+	String nilaiJanjiBayarRaw = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//div[@class='p-0 border-bottom value col'])[43]"]), FailureHandling.STOP_ON_FAILURE)
+	String nilaiJanjiBayarDunning = cleanCurrency(nilaiJanjiBayarRaw)
+	
+	if (nilaiJanjiBayarDunning.trim() == jumlahJanji.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + jumlahJanji.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + nilaiJanjiBayarDunning.trim() + " | Normal: " + jumlahJanji.trim() + "')", null)
+	}
+	
+	//close
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[normalize-space(text())='Tutup']"]), FailureHandling.STOP_ON_FAILURE)
+	
 	break
 	
 	
 	case "No Telpon Salah":
 	//goto menu telpon salah
 	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': menuTaskList.find { it.key == "Telepon Salah" }?.value]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(4)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "(//input[@placeholder='DPD'])[10]"]), 0, FailureHandling.STOP_ON_FAILURE)
+	
+	//cek masuk sesuai bucket
+	WebUI.delay(10)
+	String norekPinjamanDunning = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[10]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	println("actual in kirim email: " +norekPinjamanDunning.trim() +" Expected: " + norekpinjaman.trim())
+	
+	if (norekPinjamanDunning.trim() == norekpinjaman.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + norekpinjaman.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + norekPinjamanDunning.trim() + " | Normal: " + norekpinjaman.trim() + "')", null)
+	}
+	
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[10]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD017-009-008']"]), 0, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath',['xpath': "((//table[@role='table'])[5]//button[@class='btn mr-1 btn-warning btn-sm'][1])[1]"]), FailureHandling.STOP_ON_FAILURE)
+	
+	//get dunningcall history after submit
+	WebUI.delay(2)
+	String nilaiJanjiBayarRaw = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//div[@class='p-0 border-bottom value col'])[43]"]), FailureHandling.STOP_ON_FAILURE)
+	String nilaiJanjiBayarDunning = cleanCurrency(nilaiJanjiBayarRaw)
+	
+	if (nilaiJanjiBayarDunning.trim() == jumlahJanji.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + jumlahJanji.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + nilaiJanjiBayarDunning.trim() + " | Normal: " + jumlahJanji.trim() + "')", null)
+	}
+	
+	//close
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[normalize-space(text())='Tutup']"]), FailureHandling.STOP_ON_FAILURE)
+	
+	
 	break
 	
 	case "Partial Payment":
 	//goto menu partial payment
 	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': menuTaskList.find { it.key == "Partial Payment" }?.value]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(4)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "(//input[@placeholder='DPD'])[11]"]), 0, FailureHandling.STOP_ON_FAILURE)
+	
+	//cek masuk sesuai bucket
+	WebUI.delay(10)
+	String norekPinjamanDunning = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[11]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	println("actual in kirim email: " +norekPinjamanDunning.trim() +" Expected: " + norekpinjaman.trim())
+	
+	if (norekPinjamanDunning.trim() == norekpinjaman.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + norekpinjaman.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + norekPinjamanDunning.trim() + " | Normal: " + norekpinjaman.trim() + "')", null)
+	}
+	
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[11]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD019-009-008']"]), 0, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath',['xpath': "((//table[@role='table'])[5]//button[@class='btn mr-1 btn-warning btn-sm'][1])[1]"]), FailureHandling.STOP_ON_FAILURE)
+	
+	//get dunningcall history after submit
+	WebUI.delay(2)
+	String nilaiJanjiBayarRaw = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//div[@class='p-0 border-bottom value col'])[43]"]), FailureHandling.STOP_ON_FAILURE)
+	String nilaiJanjiBayarDunning = cleanCurrency(nilaiJanjiBayarRaw)
+	
+	if (nilaiJanjiBayarDunning.trim() == jumlahJanji.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + jumlahJanji.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + nilaiJanjiBayarDunning.trim() + " | Normal: " + jumlahJanji.trim() + "')", null)
+	}
+	
+	//close
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[normalize-space(text())='Tutup']"]), FailureHandling.STOP_ON_FAILURE)
+	
+	
 	break
 	
 	case "Sudah Bayar":
 	//goto menu sudah bayar
 	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': menuTaskList.find { it.key == "Sudah Bayar" }?.value]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(4)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "(//input[@placeholder='DPD'])[12]"]), 0, FailureHandling.STOP_ON_FAILURE)
+	
+	//cek masuk sesuai bucket
+	WebUI.delay(10)
+	String norekPinjamanDunning = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[12]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	println("actual in kirim email: " +norekPinjamanDunning.trim() +" Expected: " + norekpinjaman.trim())
+	
+	if (norekPinjamanDunning.trim() == norekpinjaman.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + norekpinjaman.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + norekPinjamanDunning.trim() + " | Normal: " + norekpinjaman.trim() + "')", null)
+	}
+	
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[12]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD025-009-008']"]), 0, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath',['xpath': "((//table[@role='table'])[5]//button[@class='btn mr-1 btn-warning btn-sm'][1])[1]"]), FailureHandling.STOP_ON_FAILURE)
+	
+	//get dunningcall history after submit
+	WebUI.delay(2)
+	String nilaiJanjiBayarRaw = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//div[@class='p-0 border-bottom value col'])[43]"]), FailureHandling.STOP_ON_FAILURE)
+	String nilaiJanjiBayarDunning = cleanCurrency(nilaiJanjiBayarRaw)
+	
+	if (nilaiJanjiBayarDunning.trim() == jumlahJanji.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + jumlahJanji.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + nilaiJanjiBayarDunning.trim() + " | Normal: " + jumlahJanji.trim() + "')", null)
+	}
+	
+	//close
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[normalize-space(text())='Tutup']"]), FailureHandling.STOP_ON_FAILURE)
+	
+	
 	break
 	
 	case "Lainnya":
 	//goto menu lainnya
 	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': menuTaskList.find { it.key == "Lainnya" }?.value]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(4)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "(//input[@placeholder='DPD'])[8]"]), 0, FailureHandling.STOP_ON_FAILURE)
+	
+	//cek masuk sesuai bucket
+	WebUI.delay(10)
+	String norekPinjamanDunning = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[8]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	println("actual in kirim email: " +norekPinjamanDunning.trim() +" Expected: " + norekpinjaman.trim())
+	
+	if (norekPinjamanDunning.trim() == norekpinjaman.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + norekpinjaman.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + norekPinjamanDunning.trim() + " | Normal: " + norekpinjaman.trim() + "')", null)
+	}
+	
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//table[@role='table'])[8]//tbody//tr[1]//td[@aria-colindex='3']//a"]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD008-009-008']"]), 0, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(1)
+	WebUI.click(findTestObject('Object Repository/xpath',['xpath': "((//table[@role='table'])[5]//button[@class='btn mr-1 btn-warning btn-sm'][1])[1]"]), FailureHandling.STOP_ON_FAILURE)
+	
+	//get dunningcall history after submit
+	WebUI.delay(2)
+	String nilaiJanjiBayarRaw = WebUI.getText(findTestObject('Object Repository/xpath', ['xpath': "(//div[@class='p-0 border-bottom value col'])[43]"]), FailureHandling.STOP_ON_FAILURE)
+	String nilaiJanjiBayarDunning = cleanCurrency(nilaiJanjiBayarRaw)
+	
+	if (nilaiJanjiBayarDunning.trim() == jumlahJanji.trim()) {
+		WebUI.executeJavaScript("alert('✅ Data sama: " + jumlahJanji.trim() + "')", null)
+	} else {
+		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + nilaiJanjiBayarDunning.trim() + " | Normal: " + jumlahJanji.trim() + "')", null)
+	}
+	
+	//close
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[normalize-space(text())='Tutup']"]), FailureHandling.STOP_ON_FAILURE)
+	
+	
 	break
 	
 default:
@@ -526,42 +848,3 @@ WebUI.comment("end")
 
 
 }//end of file
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
