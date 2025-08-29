@@ -38,14 +38,14 @@ String link = "https://dki-crms-site.skyworx.co.id/login"
 
 def pengelompokanAkun = [
 	"Janji Bayar",
-	"Kirim Email",
-	"Meninggalkan Pesan",
-	"Tidak Terjawab",
-	"Nada Sibuk",
-	"No Telpon Salah",
-	"Partial Payment",
-	"Sudah Bayar",
-	"Lainnya"
+//	"Kirim Email",
+//	"Meninggalkan Pesan",
+//	"Tidak Terjawab",
+//	"Nada Sibuk",
+//	"No Telpon Salah",
+//	"Partial Payment",
+//	"Sudah Bayar",
+//	"Lainnya"
 ]
 
 Map<String, String> mapJenisAgunan = [
@@ -509,8 +509,206 @@ switch (pengelompokanAkun[i]) {
 		WebUI.executeJavaScript("alert('❌ Data beda! Dunning: " + nilaiJanjiBayarDunning.trim() + " | Normal: " + jumlahJanji.trim() + "')", null)
 	}
 	
-	//close
+	//close dunning history
 	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[normalize-space(text())='Tutup']"]), FailureHandling.STOP_ON_FAILURE)
+	
+	//submit data agunan in bucket janji bayar
+	
+	WebUI.delay(2)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "(//select[@class='custom-select'])[2]"]), 0, FailureHandling.STOP_ON_FAILURE)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//button[@class='btn mr-1 btn-danger'])[3]"]), FailureHandling.STOP_ON_FAILURE)
+	
+	WebUI.delay(2)
+	WebUI.selectOptionByLabel(findTestObject('Object Repository/xpath', ['xpath': "//select[@id='FIELD003-008-001-002']"]), GlobalVariable.jenisAgunanInBucket, false, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(2)
+	WebUI.setText(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD003-008-001-003']"]), GlobalVariable.namaPemilikInBucket, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(2)
+	WebUI.setText(findTestObject('Object Repository/xpath', ['xpath': "//textarea[@id='FIELD003-008-001-004']"]), GlobalVariable.alamatInBucket, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(2)
+	WebUI.selectOptionByLabel(findTestObject('Object Repository/xpath', ['xpath': "//select[@id='FIELD003-008-001-005']"]), GlobalVariable.buktiKepemilikanInBucket, false, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(2)
+	WebUI.setText(findTestObject('Object Repository/xpath', ['xpath': "//textarea[@id='FIELD003-008-001-006']"]), GlobalVariable.keteranganAgunanInBucket, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(2)
+	WebUI.setText(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD003-008-001-007']"]), GlobalVariable.nilaiJaminanInBucket, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(2)
+	WebUI.setText(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD003-008-001-008']"]), GlobalVariable.NilaiPasarInBucket, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(2)
+	WebUI.setText(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD003-008-001-009']"]), GlobalVariable.NilaiLikuidasiInBucket, FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(2)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[@class='btn mx-2 btn-danger']"]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(2)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[text() ='Yes, proceed']"]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(2)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[text()='OK']"]), FailureHandling.STOP_ON_FAILURE)
+	
+	
+	//compare hasil input agunan
+	//compare Edit Anggunan dengan input
+	WebUI.delay(2)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//button[@class='btn mr-1 btn-primary btn-sm'])[last()]"]), FailureHandling.STOP_ON_FAILURE)
+	
+	WebUI.delay(3)
+	
+	// SELECT: Jenis Agunan
+	String jenisAgunanValueBucket = getDomValue("//select[@id='FIELD003-008-002-002']") // contoh: "010"
+	String jenisAgunanTextBucket  = getSelectedText("//select[@id='FIELD003-008-002-002']") // contoh: "GIRO"
+	// INPUT: Nama Pemilik
+	String namaPemilikEditBucket = getDomValue("//input[@id='FIELD003-008-002-003']")
+	// TEXTAREA: Alamat Agunan
+	String alamatAgunanEditBucket = getDomValue("//textarea[@id='FIELD003-008-002-004']")
+	// SELECT: Bukti Kepemilikan
+	String buktiKepValueBucket = getDomValue("//select[@id='FIELD003-008-002-005']")
+	String buktiKepTextBucket  = getSelectedText("//select[@id='FIELD003-008-002-005']")
+	// TEXTAREA: Keterangan Agunan
+	String keteranganAgunanEditBucket = getDomValue("//textarea[@id='FIELD003-008-002-006']")
+	// INPUT (angka): Nilai Jaminan / Pasar / Likuidasi
+	String nilaiJaminanEditBucket   = getDomValue("//input[@id='FIELD003-008-002-007']")
+	String nilaiPasarEditBucket     = getDomValue("//input[@id='FIELD003-008-002-008']")
+	String nilaiLikuidasiEditBucket = getDomValue("//input[@id='FIELD003-008-002-009']")
+	
+	// compare field dropdown Edit
+	mustEqual("Jenis Agunan (text)", GlobalVariable.jenisAgunanInBucket, jenisAgunanTextBucket)
+	mustEqual("Bukti Kepemilikan (text)",  GlobalVariable.buktiKepemilikanInBucket, buktiKepTextBucket)
+	
+	// compare field text Edit
+	mustEqual("Nama Pemilik", GlobalVariable.namaPemilikInBucket, namaPemilikEditBucket)
+	mustEqual("Alamat Agunan", GlobalVariable.alamatInBucket, alamatAgunanEditBucket)
+	mustEqual("Keterangan Agunan", GlobalVariable.keteranganAgunanInBucket, keteranganAgunanEditBucket)
+	
+	// compare num field Edit
+	mustEqual("Nilai Jaminan", normNum(GlobalVariable.nilaiJaminanInBucket), normNum(nilaiJaminanEditBucket))
+	mustEqual("Nilai Pasar",   normNum(GlobalVariable.NilaiPasarInBucket),   normNum(nilaiPasarEditBucket))
+	mustEqual("Nilai Likuidasi", normNum(GlobalVariable.NilaiLikuidasiInBucket), normNum(nilaiLikuidasiEditBucket))
+	
+	// Flag untuk cek semua validasi berhasil
+	boolean allOkBucket = true
+	allOkBucket &= (GlobalVariable.jenisAgunanInBucket == jenisAgunanTextBucket)
+	allOkBucket &= (GlobalVariable.buktiKepemilikanInBucket == buktiKepTextBucket)
+	allOkBucket &= (GlobalVariable.namaPemilikInBucket == namaPemilikEditBucket)
+	allOkBucket &= (GlobalVariable.alamatInBucket == alamatAgunanEditBucket)
+	allOkBucket &= (GlobalVariable.keteranganAgunanInBucket == keteranganAgunanEditBucket)
+	allOkBucket &= (normNum(GlobalVariable.nilaiJaminanInBucket)   == normNum(nilaiJaminanEditBucket))
+	allOkBucket &= (normNum(GlobalVariable.NilaiPasarInBucket)     == normNum(nilaiPasarEditBucket))
+	allOkBucket &= (normNum(GlobalVariable.NilaiLikuidasiInBucket) == normNum(nilaiLikuidasiEditBucket))
+	
+	if (allOkBucket) {
+		String js = """
+      if (window.Swal && typeof Swal.fire === 'function') {
+        Swal.fire({
+          icon: 'success',
+          title: 'Validasi Berhasil',
+          text: 'Semua nilai pada form edit sama dengan inputan.',
+          confirmButtonText: 'OK'
+        });
+      } else {
+        alert('✅ Validasi Berhasil: Semua nilai pada edit agunan bucket sama dengan inputan.');
+      }
+    """
+		WebUI.executeJavaScript(js, null)
+		WebUI.delay(2)
+	} else {
+		// Kalau ada mismatch, kasih popup gagal
+		String js = """
+      if (window.Swal && typeof Swal.fire === 'function') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Validasi Gagal',
+          text: 'Ada nilai yang berbeda. Cek log Katalon untuk detail.',
+          confirmButtonText: 'OK'
+        });
+      } else {
+        alert('❌ Validasi Gagal: Ada nilai yang berbeda pada edit agunan bucket. Lihat log.');
+      }
+    """
+		WebUI.executeJavaScript(js, null)
+		WebUI.delay(2)
+		// Hentikan test case
+		KeywordUtil.markFailedAndStop("Validasi gagal: Ada nilai yang berbeda dengan inputan")
+	}
+	WebUI.delay(2)
+	WebUI.scrollToElement(findTestObject('Object Repository/xpath', ['xpath': "//input[@id='FIELD003-008-002-009']"]), 0)
+	WebUI.delay(2)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "(//button[@type='button' and normalize-space(text())='Save'])[2]"]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(2)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[@type='button' and normalize-space(text())='Yes, proceed']"]), FailureHandling.STOP_ON_FAILURE)
+	WebUI.delay(2)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[@type='button' and normalize-space(text())='OK']"]), FailureHandling.STOP_ON_FAILURE)
+	
+	//compare View Anggunan dengan input
+	WebUI.delay(2)
+	WebUI.click(findTestObject('Object Repository/xpath',['xpath': "((//table[@class='table b-table table-bordered'])[3]//td[@aria-colindex='7']//button[contains(@class,'btn-warning')])[last()]"]), FailureHandling.STOP_ON_FAILURE)
+	
+	String jenisAgunanViewRawBucket = WebUI.getText(findTestObject('Object Repository/xpath',['xpath': "(//div[@class='p-0 border-bottom value col'])[38]"]))
+	String jenisAgunanViewBucket = mapValue(mapJenisAgunan, jenisAgunanViewRawBucket)
+	
+	String namaPemilikViewBucket = WebUI.getText(findTestObject('Object Repository/xpath',['xpath': "(//div[@class='p-0 border-bottom value col'])[39]"]))
+	String alamatAgunanViewBucket = WebUI.getText(findTestObject('Object Repository/xpath',['xpath': "(//div[@class='p-0 border-bottom value col'])[40]"]))
+	
+	String buktiKepViewRawBucket = WebUI.getText(findTestObject('Object Repository/xpath',['xpath': "(//div[@class='p-0 border-bottom value col'])[41]"]))
+	String buktiKepViewBucket = mapValue(mapBuktiKep, buktiKepViewRawBucket)
+	
+	//String masaBerlakuView = WebUI.getText(findTestObject('Object Repository/xpath',['xpath': "(//div[@class='p-0 border-bottom value col'])[42]"]))
+	String ketAgunanViewBucket = WebUI.getText(findTestObject('Object Repository/xpath',['xpath': "(//div[@class='p-0 border-bottom value col'])[43]"]))
+	String nilaiJaminanViewBucket = WebUI.getText(findTestObject('Object Repository/xpath',['xpath': "(//div[@class='p-0 border-bottom value col'])[44]"]))
+	String nilaiPasarViewBucket = WebUI.getText(findTestObject('Object Repository/xpath',['xpath': "(//div[@class='p-0 border-bottom value col'])[45]"]))
+	String nilaiLikuidasiViewBucket = WebUI.getText(findTestObject('Object Repository/xpath',['xpath': "(//div[@class='p-0 border-bottom value col'])[46]"]))
+	
+	
+	mustEqual("Jenis Agunan", GlobalVariable.jenisAgunanInBucket, jenisAgunanViewBucket)
+	mustEqual("Nama Pemilik", GlobalVariable.namaPemilikInBucket, namaPemilikViewBucket)
+	mustEqual("Alamat Agunan", GlobalVariable.alamatInBucket, alamatAgunanViewBucket)
+	mustEqual("Bukti Kepemilikan", GlobalVariable.buktiKepemilikanInBucket, buktiKepViewBucket)
+	mustEqual("Keterangan Agunan", GlobalVariable.keteranganAgunanInBucket, ketAgunanViewBucket)
+	mustEqual("Nilai Jaminan", cleanCurrency(GlobalVariable.nilaiJaminanInBucket), cleanCurrency(nilaiJaminanViewBucket))
+	mustEqual("Nilai Pasar", cleanCurrency(GlobalVariable.NilaiPasarInBucket), cleanCurrency(nilaiPasarViewBucket))
+	mustEqual("Nilai Likuidasi", cleanCurrency(GlobalVariable.NilaiLikuidasiInBucket), cleanCurrency(nilaiLikuidasiViewBucket))
+	
+	// Flag untuk cek semua validasi berhasil pada bukcett
+	boolean allOkinViewBucket = true
+	allOkinViewBucket &= (GlobalVariable.jenisAgunanInBucket == jenisAgunanViewBucket)
+	allOkinViewBucket &= (GlobalVariable.buktiKepemilikanInBucket == buktiKepViewBucket)
+	allOkinViewBucket &= (GlobalVariable.namaPemilikInBucket == namaPemilikViewBucket)
+	allOkinViewBucket &= (GlobalVariable.alamatInBucket == alamatAgunanViewBucket)
+	allOkinViewBucket &= (GlobalVariable.keteranganAgunanInBucket == ketAgunanViewBucket)
+	allOkinViewBucket &= (cleanCurrency(GlobalVariable.nilaiJaminanInBucket)   == cleanCurrency(nilaiJaminanViewBucket) )
+	allOkinViewBucket &= (cleanCurrency(GlobalVariable.NilaiPasarInBucket)     == cleanCurrency(nilaiPasarViewBucket) )
+	allOkinViewBucket &= (cleanCurrency(GlobalVariable.NilaiLikuidasiInBucket) == cleanCurrency(nilaiLikuidasiViewBucket) )
+	
+	if (allOkinViewBucket) {
+		String js = """
+      if (window.Swal && typeof Swal.fire === 'function') {
+        Swal.fire({
+          icon: 'success',
+          title: 'Validasi Berhasil',
+          text: 'Semua data input sama dengan data view.',
+          confirmButtonText: 'OK'
+        });
+      } else {
+        alert('✅ Validasi Berhasil: Semua data sama dengan view.');
+      }
+    """
+		WebUI.executeJavaScript(js, null)
+	} else {
+		String js = """
+      if (window.Swal && typeof Swal.fire === 'function') {
+        Swal.fire({
+          icon: 'error',
+          title: 'Validasi Gagal',
+          text: 'Ada data yang berbeda, cek log untuk detail.',
+          confirmButtonText: 'OK'
+        });
+      } else {
+        alert('❌ Validasi Gagal: Ada data yang berbeda, lihat log.');
+      }
+    """
+		WebUI.executeJavaScript(js, null)
+	
+	}
+	WebUI.delay(3)
+	WebUI.click(findTestObject('Object Repository/xpath', ['xpath': "//button[@type='button' and normalize-space(text())='Tutup']"]), FailureHandling.STOP_ON_FAILURE)
+	
+	
+	
 	break
 	
 	case "Kirim Email":
@@ -848,3 +1046,42 @@ WebUI.comment("end")
 
 
 }//end of file
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
