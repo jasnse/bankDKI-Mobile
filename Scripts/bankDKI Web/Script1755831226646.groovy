@@ -38,14 +38,14 @@ String link = "https://dki-crms-site.skyworx.co.id/login"
 
 def pengelompokanAkun = [
 	"Janji Bayar",
-//	"Kirim Email",
-//	"Meninggalkan Pesan",
-//	"Tidak Terjawab",
-//	"Nada Sibuk",
-//	"No Telpon Salah",
-//	"Partial Payment",
-//	"Sudah Bayar",
-//	"Lainnya"
+	"Kirim Email",
+	"Meninggalkan Pesan",
+	"Tidak Terjawab",
+	"Nada Sibuk",
+	"No Telpon Salah",
+	"Partial Payment",
+	"Sudah Bayar",
+	"Lainnya"
 ]
 
 Map<String, String> mapJenisAgunan = [
